@@ -10,7 +10,7 @@ Expires: 11 May 2027
 
    Post-Quantum updates for the Simple Certificate Enrolment Protocol
                                  (SCEP)
-                         draft-scep-pqc-latest
+                         draft-pqc-scep-latest
 
 Abstract
 
@@ -23,7 +23,7 @@ About This Document
    The latest revision of this draft can be found at
    https://ounsworth.github.io/draft-pqc-scep/draft-scep-pqc.html.
    Status information for this document may be found at
-   https://datatracker.ietf.org/doc/draft-scep-pqc/.
+   https://datatracker.ietf.org/doc/draft-pqc-scep/.
 
    Source for this draft and an issue tracker can be found at
    https://github.com/ounsworth/draft-pqc-scep.
