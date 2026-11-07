@@ -20,8 +20,8 @@ venue:
 #  type: Working Group
 #  mail: WG@example.com
 #  arch: https://example.com/WG
-  github: "ounsworth/draft-scep-pqc"
-  latest: "https://ounsworth.github.io/draft-scep-pqc/draft-scep-pqc.html"
+  github: "ounsworth/draft-pqc-scep"
+  latest: "https://ounsworth.github.io/draft-pqc-scep/draft-scep-pqc.html"
 
 author:
  -
