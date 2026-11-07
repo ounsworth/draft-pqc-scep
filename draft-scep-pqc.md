@@ -1,6 +1,6 @@
 ---
-title: "TODO - Your title"
-abbrev: "TODO - Abbreviation"
+title: "Post-Quantum updates for the Simple Certificate Enrolment Protocol (SCEP)"
+abbrev: "pqc-scep"
 category: info
 
 docname: draft-scep-pqc-latest
