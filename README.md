@@ -1,8 +1,8 @@
 <!-- regenerate: on (set to off if you edit this file) -->
 
-# TODO - Your title
+# Post-Quantum updates for the Simple Certificate Enrolment Protocol (SCEP)
 
-This is the working area for the individual Internet-Draft, "TODO - Your title".
+This is the working area for the individual Internet-Draft, "draft-pqc-scep".
 
 * [Editor's Copy](https://ounsworth.github.io/draft-pqc-scep/#go.draft-scep-pqc.html)
 * [Datatracker Page](https://datatracker.ietf.org/doc/draft-scep-pqc)
