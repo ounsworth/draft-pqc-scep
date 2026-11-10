@@ -6,6 +6,7 @@ category: info
 docname: draft-pqc-scep-latest
 submissiontype: IETF  # also: "independent", "editorial", "IAB", or "IRTF"
 number:
+updates: 8894
 date:
 consensus: true
 v: 3
@@ -103,15 +104,15 @@ As with {{RFC8894}}, the client obtains the CA's certificates via the GetCACert 
 
 When the CA possesses both a signing and an encryption certificate, the GetNextCACert response ({{Section 4.7 of RFC8894}}) behaves the same way and MUST contain both the CA's next signing certificate and its next encryption certificate, and the client distinguishes them in the same way as for GetCACert. As in {{RFC8894}}, the GetNextCACert response is signed by the CA's current signing key, and the client MUST validate that signature before trusting either certificate.
 
-## New GetCACaps keywords
+## New GetCACaps Keywords
 
 TODO: To be done in a future version. Define GetCACaps keywords ({{Section 3.5.2 of RFC8894}}) that let a CA advertise support for the mechanisms in this document, such as KEM-based request encryption, KEK-based response encryption, and specific KEM and signature algorithms. Register them in the "SCEP CA Capabilities" registry, and note that GetCACaps responses are not authenticated ({{Section 7.5 of RFC8894}}). This will have new stuff for IANA Considerations.
 
-# Encrypting requests with a KEM algorithm
+# Encrypting Requests with a KEM Algorithm
 
 This document extends the CMS encryption envelope mechanisms KeyTransRecipientInfo and PasswordRecipientInfo supported in {{Section 3.1 of RFC8894}} to additionally support KEM algorithms via the the CMS KEMRecipientInfo mechanism {{RFC9629}}. This applies to every pkiMessage that the client sends to the CA, that is, PKCSReq, RenewalReq, CertPoll, GetCert, and GetCRL. The pkcsPKIEnvelope is otherwise unchanged from {{Section 3.2.2 of RFC8894}}. When the recipient encryption key is a KEM key, the EnvelopedData MUST contain exactly one RecipientInfo, which is a KEMRecipientInfo whose rid identifies the CA's encryption certificate. The KDF and key-encryption algorithms to use are specified by an algorithm's CMS specification. For example, how to use ML-KEM within CMS is specified in {{RFC9936}}.
 
-# Encrypting responses
+# Encrypting Responses
 
 {{Section 3.1 of RFC8894}} encrypts the CertRep to the public key of the certificate that signed the request if that key is encryption capable, and otherwise uses PasswordRecipientInfo keyed with the challengePassword.
 
@@ -119,6 +120,7 @@ The introduction of KEMRecipientInfo allows for a more efficient response encryp
 
 A worked example of this key derivation is given in {{appdx-response-kek}}.
 
+See {{response-recipient-authentication}} for discussion of how this modifies the response authentication model relative to {{RFC8894}}.
 
 # Enrolment of KEM End-Entity Certificates
 
@@ -187,6 +189,12 @@ In {{RFC8894}}, the response is encrypted to the key in the certificate that sig
 ## Post-Quantum Security
 
 An attacker who records SCEP traffic now could decrypt it later with a cryptographically relevant quantum computer, exposing the challengePassword and the request contents. Deployments requiring post-quantum confidentiality SHOULD encrypt requests using KEMRecipientInfo with a post-quantum KEM, and SHOULD NOT use KeyTransRecipientInfo with RSA. Where such deployments instead rely on PasswordRecipientInfo, the challengePassword SHOULD have at least 128 bits of entropy, since the protection is then only as strong as the challengePassword ({{Section 7.3 of RFC8894}}). Classical signatures are at risk only from an attacker who has a quantum computer at the time of the exchange. Deployments requiring post-quantum authentication SHOULD use post-quantum signature algorithms for both the CA's signing certificate and the client's signing key.
+
+## Response Recipient Authentication
+
+In {{RFC8894}}, a response encrypted under KeyTransRecipientInfo is implicitly authenticated to the key requesting enrolment since the private key is required to read the response.
+
+ The KEKRecipientInfo response encryption mechanism defined in this document implicitly authenticates the response recipient to be the same client that sent the request, but does not require the subject's private key for decryption. Even in the case where the subject key being enrolled is a KEM key, such a mechanism is still not provided. This is considered to be a sufficiently similar protocol authentication model as to be acceptable.
 
 ## Decryption Oracles
 
