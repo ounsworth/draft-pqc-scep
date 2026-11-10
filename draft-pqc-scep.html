@@ -5,15 +5,24 @@
 <meta content="Common,Latin" name="scripts">
 <meta content="initial-scale=1.0" name="viewport">
 <title>Post-Quantum updates for the Simple Certificate Enrolment Protocol (SCEP)</title>
-<meta content="Mike Ounsworth" name="author">
 <meta content="Mike Agrenius Kushner" name="author">
+<meta content="Mike Ounsworth" name="author">
+<meta content="Alex Harrison" name="author">
 <meta content="
-       TODO Abstract 
+       The Simple Certificate Enrolment Protocol (SCEP), as specified in RFC 8894,
+was designed around RSA and the assumption that a single key pair
+can be used for both signing and encryption. This assumption will not hold for post-quantum key pairs. 
+       This document specifies several mechanisms to modernize SCEP for use with post-quantum cryptography.
+The main focus areas are: 1. allowing the CA to have separate signing and encryption certificates,
+2. support for KEM-based SCEP protocol encryption, and 3. supporting enrolment of KEM end entity certificates. 
+       The changes are kept minimal so that they can be easily implemented with minimal impact on existing
+SCEP tooling. 
     " name="description">
 <meta content="xml2rfc 3.35.0" name="generator">
-<meta content="next generation" name="keyword">
-<meta content="unicorn" name="keyword">
-<meta content="sparkling distributed ledger" name="keyword">
+<meta content="SCEP" name="keyword">
+<meta content="PKI" name="keyword">
+<meta content="X.509 Certificate Management" name="keyword">
+<meta content="Post-Quantum" name="keyword">
 <meta content="draft-pqc-scep-latest" name="ietf.draft">
 <!-- Generator version information:
   xml2rfc 3.35.0
@@ -1047,8 +1056,8 @@ svg {
 <td class="right">November 2026</td>
 </tr></thead>
 <tfoot><tr>
-<td class="left">Ounsworth &amp; Kushner</td>
-<td class="center">Expires 11 May 2027</td>
+<td class="left">Kushner, et al.</td>
+<td class="center">Expires 14 May 2027</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1061,20 +1070,25 @@ svg {
 <dd class="internet-draft">draft-pqc-scep-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2026-11-07" class="published">7 November 2026</time>
+<time datetime="2026-11-10" class="published">10 November 2026</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Informational</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2027-05-11">11 May 2027</time></dd>
+<dd class="expires"><time datetime="2027-05-14">14 May 2027</time></dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
-      <div class="author-name">M. Ounsworth</div>
+      <div class="author-name">M. Kushner</div>
+<div class="org">Keyfactor</div>
 </div>
 <div class="author">
-      <div class="author-name">M. A. Kushner</div>
-<div class="org">Keyfactor</div>
+      <div class="author-name">M. Ounsworth</div>
+<div class="org">Cryptic Forest</div>
+</div>
+<div class="author">
+      <div class="author-name">A. Harrison</div>
+<div class="org">Cisco Systems</div>
 </div>
 </dd>
 </dl>
@@ -1082,7 +1096,14 @@ svg {
 <h1 id="title">Post-Quantum updates for the Simple Certificate Enrolment Protocol (SCEP)</h1>
 <section id="section-abstract">
       <h2 id="abstract"><a href="#abstract" class="selfRef">Abstract</a></h2>
-<p id="section-abstract-1">TODO Abstract<a href="#section-abstract-1" class="pilcrow">¶</a></p>
+<p id="section-abstract-1">The Simple Certificate Enrolment Protocol (SCEP), as specified in RFC 8894,
+was designed around RSA and the assumption that a single key pair
+can be used for both signing and encryption. This assumption will not hold for post-quantum key pairs.<a href="#section-abstract-1" class="pilcrow">¶</a></p>
+<p id="section-abstract-2">This document specifies several mechanisms to modernize SCEP for use with post-quantum cryptography.
+The main focus areas are: 1. allowing the CA to have separate signing and encryption certificates,
+2. support for KEM-based SCEP protocol encryption, and 3. supporting enrolment of KEM end entity certificates.<a href="#section-abstract-2" class="pilcrow">¶</a></p>
+<p id="section-abstract-3">The changes are kept minimal so that they can be easily implemented with minimal impact on existing
+SCEP tooling.<a href="#section-abstract-3" class="pilcrow">¶</a></p>
 </section>
 <section class="note rfcEditorRemove" id="section-note.1">
       <h2 id="name-about-this-document">
@@ -1090,7 +1111,7 @@ svg {
       </h2>
 <p id="section-note.1-1">This note is to be removed before publishing as an RFC.<a href="#section-note.1-1" class="pilcrow">¶</a></p>
 <p id="section-note.1-2">
-        The latest revision of this draft can be found at <span><a href="https://ounsworth.github.io/draft-pqc-scep/draft-scep-pqc.html">https://ounsworth.github.io/draft-pqc-scep/draft-scep-pqc.html</a></span>.
+        The latest revision of this draft can be found at <span><a href="https://ounsworth.github.io/draft-pqc-scep/draft-pqc-scep.html">https://ounsworth.github.io/draft-pqc-scep/draft-pqc-scep.html</a></span>.
         Status information for this document may be found at <span><a href="https://datatracker.ietf.org/doc/draft-pqc-scep/">https://datatracker.ietf.org/doc/draft-pqc-scep/</a></span>.<a href="#section-note.1-2" class="pilcrow">¶</a></p>
 <p id="section-note.1-3">Source for this draft and an issue tracker can be found at
         <span><a href="https://github.com/ounsworth/draft-pqc-scep">https://github.com/ounsworth/draft-pqc-scep</a></span>.<a href="#section-note.1-3" class="pilcrow">¶</a></p>
@@ -1114,7 +1135,7 @@ svg {
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 11 May 2027.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 14 May 2027.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1147,68 +1168,106 @@ svg {
             <p id="section-toc.1-1.1.1" class="keepWithNext"><a href="#section-1" class="auto internal xref">1</a>.  <a href="#name-introduction" class="internal xref">Introduction</a></p>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.2">
-            <p id="section-toc.1-1.2.1"><a href="#section-2" class="auto internal xref">2</a>.  <a href="#name-operational-changes" class="internal xref">Operational Changes</a></p>
-<ul class="compact toc ulBare ulEmpty">
-<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.2.2.1">
-                <p id="section-toc.1-1.2.2.1.1" class="keepWithNext"><a href="#section-2.1" class="auto internal xref">2.1</a>.  <a href="#name-getcacaps" class="internal xref">getCACaps</a></p>
-</li>
-              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.2.2.2">
-                <p id="section-toc.1-1.2.2.2.1" class="keepWithNext"><a href="#section-2.2" class="auto internal xref">2.2</a>.  <a href="#name-pkcsreq" class="internal xref">PKCSREQ</a></p>
-</li>
-            </ul>
+            <p id="section-toc.1-1.2.1" class="keepWithNext"><a href="#section-2" class="auto internal xref">2</a>.  <a href="#name-conventions-and-definitions" class="internal xref">Conventions and Definitions</a></p>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3">
-            <p id="section-toc.1-1.3.1"><a href="#section-3" class="auto internal xref">3</a>.  <a href="#name-workflow-example-pkcsreq" class="internal xref">Workflow Example: PKCSREQ</a></p>
+            <p id="section-toc.1-1.3.1"><a href="#section-3" class="auto internal xref">3</a>.  <a href="#name-ca-signing-and-encryption-c" class="internal xref">CA Signing and Encryption Certificates</a></p>
 <ul class="compact toc ulBare ulEmpty">
 <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.1">
-                <p id="section-toc.1-1.3.2.1.1"><a href="#section-3.1" class="auto internal xref">3.1</a>.  <a href="#name-scep-client-request" class="internal xref">SCEP Client Request</a></p>
-</li>
-              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.2">
-                <p id="section-toc.1-1.3.2.2.1"><a href="#section-3.2" class="auto internal xref">3.2</a>.  <a href="#name-ca-issuance-and-response" class="internal xref">CA Issuance and Response</a></p>
-</li>
-              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.3">
-                <p id="section-toc.1-1.3.2.3.1"><a href="#section-3.3" class="auto internal xref">3.3</a>.  <a href="#name-scep-client-receipt" class="internal xref">SCEP Client Receipt</a></p>
+                <p id="section-toc.1-1.3.2.1.1" class="keepWithNext"><a href="#section-3.1" class="auto internal xref">3.1</a>.  <a href="#name-new-getcacaps-keywords" class="internal xref">New GetCACaps keywords</a></p>
 </li>
             </ul>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4">
-            <p id="section-toc.1-1.4.1"><a href="#section-4" class="auto internal xref">4</a>.  <a href="#name-differences-to-rfc-8894" class="internal xref">Differences to RFC 8894</a></p>
-<ul class="compact toc ulBare ulEmpty">
-<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.1">
-                <p id="section-toc.1-1.4.2.1.1"><a href="#section-4.1" class="auto internal xref">4.1</a>.  <a href="#name-use-of-ra-certificates" class="internal xref">Use of RA Certificates</a></p>
-</li>
-            </ul>
+            <p id="section-toc.1-1.4.1"><a href="#section-4" class="auto internal xref">4</a>.  <a href="#name-encrypting-requests-with-a-" class="internal xref">Encrypting requests with a KEM algorithm</a></p>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5">
-            <p id="section-toc.1-1.5.1"><a href="#section-5" class="auto internal xref">5</a>.  <a href="#name-conventions-and-definitions" class="internal xref">Conventions and Definitions</a></p>
+            <p id="section-toc.1-1.5.1"><a href="#section-5" class="auto internal xref">5</a>.  <a href="#name-encrypting-responses" class="internal xref">Encrypting responses</a></p>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6">
-            <p id="section-toc.1-1.6.1"><a href="#section-6" class="auto internal xref">6</a>.  <a href="#name-security-considerations" class="internal xref">Security Considerations</a></p>
+            <p id="section-toc.1-1.6.1"><a href="#section-6" class="auto internal xref">6</a>.  <a href="#name-enrolment-of-kem-end-entity" class="internal xref">Enrolment of KEM End-Entity Certificates</a></p>
 <ul class="compact toc ulBare ulEmpty">
 <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.1">
-                <p id="section-toc.1-1.6.2.1.1"><a href="#section-6.1" class="auto internal xref">6.1</a>.  <a href="#name-key-material-handling" class="internal xref">Key Material Handling</a></p>
+                <p id="section-toc.1-1.6.2.1.1"><a href="#section-6.1" class="auto internal xref">6.1</a>.  <a href="#name-option-1-direct-decryption-" class="internal xref">Option 1: Direct Decryption Challenge</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.2">
+                <p id="section-toc.1-1.6.2.2.1"><a href="#section-6.2" class="auto internal xref">6.2</a>.  <a href="#name-option-2-indirect-decryptio" class="internal xref">Option 2: Indirect Decryption via Encrypted Certificate</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6.2.3">
+                <p id="section-toc.1-1.6.2.3.1"><a href="#section-6.3" class="auto internal xref">6.3</a>.  <a href="#name-option-3-enrol-a-signing-ke" class="internal xref">Option 3: Enrol a Signing Key First</a></p>
 </li>
             </ul>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7">
-            <p id="section-toc.1-1.7.1"><a href="#section-7" class="auto internal xref">7</a>.  <a href="#name-iana-considerations" class="internal xref">IANA Considerations</a></p>
+            <p id="section-toc.1-1.7.1"><a href="#section-7" class="auto internal xref">7</a>.  <a href="#name-error-handling" class="internal xref">Error Handling</a></p>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8">
-            <p id="section-toc.1-1.8.1"><a href="#section-8" class="auto internal xref">8</a>.  <a href="#name-references" class="internal xref">References</a></p>
+            <p id="section-toc.1-1.8.1"><a href="#section-8" class="auto internal xref">8</a>.  <a href="#name-operational-considerations" class="internal xref">Operational Considerations</a></p>
 <ul class="compact toc ulBare ulEmpty">
 <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8.2.1">
-                <p id="section-toc.1-1.8.2.1.1"><a href="#section-8.1" class="auto internal xref">8.1</a>.  <a href="#name-normative-references" class="internal xref">Normative References</a></p>
+                <p id="section-toc.1-1.8.2.1.1"><a href="#section-8.1" class="auto internal xref">8.1</a>.  <a href="#name-coexistence-with-legacy-sce" class="internal xref">Coexistence with Legacy SCEP Deployments</a></p>
 </li>
             </ul>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9">
-            <p id="section-toc.1-1.9.1"><a href="#section-9" class="auto internal xref">9</a>.  <a href="#name-normative-references-2" class="internal xref">Normative References</a></p>
+            <p id="section-toc.1-1.9.1"><a href="#section-9" class="auto internal xref">9</a>.  <a href="#name-security-considerations" class="internal xref">Security Considerations</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9.2.1">
+                <p id="section-toc.1-1.9.2.1.1"><a href="#section-9.1" class="auto internal xref">9.1</a>.  <a href="#name-key-material-handling" class="internal xref">Key Material Handling</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9.2.2">
+                <p id="section-toc.1-1.9.2.2.1"><a href="#section-9.2" class="auto internal xref">9.2</a>.  <a href="#name-kem-algorithm-requirements" class="internal xref">KEM Algorithm Requirements</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9.2.3">
+                <p id="section-toc.1-1.9.2.3.1"><a href="#section-9.3" class="auto internal xref">9.3</a>.  <a href="#name-response-key-derivation" class="internal xref">Response Key Derivation</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9.2.4">
+                <p id="section-toc.1-1.9.2.4.1"><a href="#section-9.4" class="auto internal xref">9.4</a>.  <a href="#name-binding-of-the-response-to-" class="internal xref">Binding of the Response to the Request</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9.2.5">
+                <p id="section-toc.1-1.9.2.5.1"><a href="#section-9.5" class="auto internal xref">9.5</a>.  <a href="#name-post-quantum-security" class="internal xref">Post-Quantum Security</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9.2.6">
+                <p id="section-toc.1-1.9.2.6.1"><a href="#section-9.6" class="auto internal xref">9.6</a>.  <a href="#name-decryption-oracles" class="internal xref">Decryption Oracles</a></p>
+</li>
+            </ul>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.10">
-            <p id="section-toc.1-1.10.1"><a href="#appendix-A" class="auto internal xref"></a><a href="#name-acknowledgments" class="internal xref">Acknowledgments</a></p>
+            <p id="section-toc.1-1.10.1"><a href="#section-10" class="auto internal xref">10</a>. <a href="#name-iana-considerations" class="internal xref">IANA Considerations</a></p>
 </li>
           <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.11">
-            <p id="section-toc.1-1.11.1"><a href="#appendix-B" class="auto internal xref"></a><a href="#name-authors-addresses" class="internal xref">Authors' Addresses</a></p>
+            <p id="section-toc.1-1.11.1"><a href="#section-11" class="auto internal xref">11</a>. <a href="#name-references" class="internal xref">References</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.11.2.1">
+                <p id="section-toc.1-1.11.2.1.1"><a href="#section-11.1" class="auto internal xref">11.1</a>.  <a href="#name-normative-references" class="internal xref">Normative References</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.11.2.2">
+                <p id="section-toc.1-1.11.2.2.1"><a href="#section-11.2" class="auto internal xref">11.2</a>.  <a href="#name-informative-references" class="internal xref">Informative References</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.12">
+            <p id="section-toc.1-1.12.1"><a href="#appendix-A" class="auto internal xref">Appendix A</a>.  <a href="#name-worked-example-response-key" class="internal xref">Worked Example: Response Key Derivation</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.13">
+            <p id="section-toc.1-1.13.1"><a href="#appendix-B" class="auto internal xref">Appendix B</a>.  <a href="#name-open-design-questions" class="internal xref">Open Design Questions</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.13.2.1">
+                <p id="section-toc.1-1.13.2.1.1"><a href="#appendix-B.1" class="auto internal xref">B.1</a>.  <a href="#name-downgrade-protection" class="internal xref">Downgrade Protection</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.13.2.2">
+                <p id="section-toc.1-1.13.2.2.1"><a href="#appendix-B.2" class="auto internal xref">B.2</a>.  <a href="#name-algorithm-profile-and-manda" class="internal xref">Algorithm Profile and Mandatory-to-Implement Algorithms</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.13.2.3">
+                <p id="section-toc.1-1.13.2.3.1"><a href="#appendix-B.3" class="auto internal xref">B.3</a>.  <a href="#name-message-size-and-http-trans" class="internal xref">Message Size and HTTP Transport</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.14">
+            <p id="section-toc.1-1.14.1"><a href="#appendix-C" class="auto internal xref"></a><a href="#name-acknowledgments" class="internal xref">Acknowledgments</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.15">
+            <p id="section-toc.1-1.15.1"><a href="#appendix-D" class="auto internal xref"></a><a href="#name-authors-addresses" class="internal xref">Authors' Addresses</a></p>
 </li>
         </ul>
 </nav>
@@ -1219,273 +1278,392 @@ svg {
       <h2 id="name-introduction">
 <a href="#section-1" class="section-number selfRef">1. </a><a href="#name-introduction" class="section-name selfRef">Introduction</a>
       </h2>
-<p id="section-1-1">SCEP is one of the earliest enrollment protocols and predates widespread use of SSL/TLS, so thus relies on its own encryption mechanisms to protect the payload. While RFC 8894 allows for the encapsulation of payloads using the challengePassword, in modern practice it's desirable to use the server's and client's respective keys for encryption. As SCEP also predates widespread use of elliptic curves, the restriction to RSA keys was considered an acceptable limitation at the time.<a href="#section-1-1" class="pilcrow">¶</a></p>
-<p id="section-1-2">With the global migration of existing ciphers to quantum safe ones, this limitation becomes far more dire, and there is an existing need to amend SCEP to be able to handle post quantum ciphers. Fortunately, there is an update of CMS (RFC 9936) which allows ML-KEM keys to be used to facilitate enrollment of PQC ciphers over SCEP.<a href="#section-1-2" class="pilcrow">¶</a></p>
-<p id="section-1-3">This document describes the procedure needed by CAs and clients in order to utilize SCEP to issue PQC Certificates from a PQC Certificate Authority.<a href="#section-1-3" class="pilcrow">¶</a></p>
-</section>
-</div>
-<div id="operational-changes">
-<section id="section-2">
-      <h2 id="name-operational-changes">
-<a href="#section-2" class="section-number selfRef">2. </a><a href="#name-operational-changes" class="section-name selfRef">Operational Changes</a>
-      </h2>
-<div id="getcacaps">
-<section id="section-2.1">
-        <h3 id="name-getcacaps">
-<a href="#section-2.1" class="section-number selfRef">2.1. </a><a href="#name-getcacaps" class="section-name selfRef">getCACaps</a>
-        </h3>
-<p id="section-2.1-1">The GetCACaps is modified by the CA adding the ML-KEM algorithm name (i.e. ML-KEM-768) to the GetCACaps response to indicate to clients that it's expecting requests to be encrypted using an ephemeral symmetric key, with key encapsulation done through ML-KEM.<a href="#section-2.1-1" class="pilcrow">¶</a></p>
-</section>
-</div>
-<div id="pkcsreq">
-<section id="section-2.2">
-        <h3 id="name-pkcsreq">
-<a href="#section-2.2" class="section-number selfRef">2.2. </a><a href="#name-pkcsreq" class="section-name selfRef">PKCSREQ</a>
-        </h3>
-<p id="section-2.2-1">The main operational difference to RFC 8894 is that the requester's key no longer needs to be RSA as it is no longer directly involved in the payload encryption process for the response, but can instead be ECDSA, EdDSA or any of the post-quantum DSA ciphers.<a href="#section-2.2-1" class="pilcrow">¶</a></p>
-<p id="section-2.2-2">The PKCSREQ operation instead relies on an ephemeral symmetric key generated by the client, and a key exchange performed alongside sending the CMS as outlined in RFC 9936, as described in the workflow example below.<a href="#section-2.2-2" class="pilcrow">¶</a></p>
-</section>
-</div>
-</section>
-</div>
-<div id="workflow-example-pkcsreq">
-<section id="section-3">
-      <h2 id="name-workflow-example-pkcsreq">
-<a href="#section-3" class="section-number selfRef">3. </a><a href="#name-workflow-example-pkcsreq" class="section-name selfRef">Workflow Example: PKCSREQ</a>
-      </h2>
-<p id="section-3-1">This workflow will omit some SCEP-related actions for the sake of brevity, unless they directly affect the encapsulation operation<a href="#section-3-1" class="pilcrow">¶</a></p>
-<div id="scep-client-request">
-<section id="section-3.1">
-        <h3 id="name-scep-client-request">
-<a href="#section-3.1" class="section-number selfRef">3.1. </a><a href="#name-scep-client-request" class="section-name selfRef">SCEP Client Request</a>
-        </h3>
-<p id="section-3.1-1">The client:<a href="#section-3.1-1" class="pilcrow">¶</a></p>
-<ol start="1" type="1" class="normal type-1" id="section-3.1-2">
-<li id="section-3.1-2.1">
-            <p id="section-3.1-2.1.1">performs the getCACaps operation, verifying that the CA is capable of performing KEM operations.<a href="#section-3.1-2.1.1" class="pilcrow">¶</a></p>
+<p id="section-1-1">The Simple Certificate Enrolment Protocol (SCEP) <span>[<a href="#RFC8894" class="cite xref">RFC8894</a>]</span> predates the widespread use of TLS, and protects its own messages using the Cryptographic Message Syntax (CMS) <span>[<a href="#RFC5652" class="cite xref">RFC5652</a>]</span>. Each SCEP message is signed by its sender and encrypted to its recipient. SCEP was designed around RSA, where a Certification Authority (CA) uses one key pair to decrypt SCEP requests, sign SCEP responses, and sign issued certificates. A client uses one key pair both to sign its request and to receive the encrypted response.<a href="#section-1-1" class="pilcrow">¶</a></p>
+<p id="section-1-2">Post-quantum algorithms do not fit this model. ML-DSA <span>[<a href="#RFC9881" class="cite xref">RFC9881</a>]</span> and SLH-DSA <span>[<a href="#RFC9909" class="cite xref">RFC9909</a>]</span> can only sign, and ML-KEM <span>[<a href="#RFC9935" class="cite xref">RFC9935</a>]</span> is a Key Encapsulation Mechanism (KEM) that can only establish shared secrets. A SCEP CA or client with only post-quantum keys therefore cannot use <span>[<a href="#RFC8894" class="cite xref">RFC8894</a>]</span> as it stands. Meanwhile, requests encrypted using RSA key transport, including the challengePassword they carry, are exposed to an attacker who records them now and decrypts them later with a cryptographically relevant quantum computer.<a href="#section-1-2" class="pilcrow">¶</a></p>
+<p id="section-1-3">This document updates <span>[<a href="#RFC8894" class="cite xref">RFC8894</a>]</span> as follows:<a href="#section-1-3" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-1-4.1">
+          <p id="section-1-4.1.1">The CA can hold a separate encryption certificate alongside its signing certificate, and returns both in GetCACert and GetNextCACert responses (<a href="#ca-signing-and-encryption-certificates" class="auto internal xref">Section 3</a>).<a href="#section-1-4.1.1" class="pilcrow">¶</a></p>
 </li>
-          <li id="section-3.1-2.2">
-            <p id="section-3.1-2.2.1">perform the getCACerts operation, which returns the CA's signing certificate, encryption certificate and CA chain.<a href="#section-3.1-2.2.1" class="pilcrow">¶</a></p>
+        <li class="normal" id="section-1-4.2">
+          <p id="section-1-4.2.1">Clients can encrypt requests to a CA's KEM key using the CMS KEMRecipientInfo mechanism <span>[<a href="#RFC9629" class="cite xref">RFC9629</a>]</span>, for example with ML-KEM <span>[<a href="#RFC9936" class="cite xref">RFC9936</a>]</span> (<a href="#encrypting-requests-with-a-kem-algorithm" class="auto internal xref">Section 4</a>).<a href="#section-1-4.2.1" class="pilcrow">¶</a></p>
 </li>
-          <li id="section-3.1-2.3">
-            <p id="section-3.1-2.3.1">generates a standard PKCS#10 CSR<a href="#section-3.1-2.3.1" class="pilcrow">¶</a></p>
+        <li class="normal" id="section-1-4.3">
+          <p id="section-1-4.3.1">The CA encrypts responses to such requests under a key derived from the request, so a client whose key can only sign can still receive an encrypted response protected by a KEM-based key exchange (<a href="#encrypting-responses" class="auto internal xref">Section 5</a>).<a href="#section-1-4.3.1" class="pilcrow">¶</a></p>
 </li>
-          <li id="section-3.1-2.4">
-            <p id="section-3.1-2.4.1">generates a transaction ID as per RFC 8894.<a href="#section-3.1-2.4.1" class="pilcrow">¶</a></p>
+        <li class="normal" id="section-1-4.4">
+          <p id="section-1-4.4.1">Options for enrolling KEM end-entity keys are described as an open problem (<a href="#enrolment-of-kem-end-entity-certificates" class="auto internal xref">Section 6</a>).<a href="#section-1-4.4.1" class="pilcrow">¶</a></p>
 </li>
-          <li id="section-3.1-2.5">
-            <p id="section-3.1-2.5.1">generates the Recipient Info with the RFC 9936 key wrap (AES-128 for ML-KEM-512, AES-256 otherwise) and HKDF-SHA256. The recipient is identified by issuer and serial number.<a href="#section-3.1-2.5.1" class="pilcrow">¶</a></p>
-</li>
-          <li id="section-3.1-2.6">
-            <p id="section-3.1-2.6.1">generates a symmetric Content Encryption Key (CEK), presumably AES, as per RFC 5652.<a href="#section-3.1-2.6.1" class="pilcrow">¶</a></p>
-</li>
-          <li id="section-3.1-2.7">
-            <p id="section-3.1-2.7.1">encrypts the CSR using the CEK<a href="#section-3.1-2.7.1" class="pilcrow">¶</a></p>
-</li>
-          <li id="section-3.1-2.8">
-            <p id="section-3.1-2.8.1">uses the CA's public encryption key to derive:<a href="#section-3.1-2.8.1" class="pilcrow">¶</a></p>
-<ol start="1" type="1" class="normal type-1" id="section-3.1-2.8.2">
-<li id="section-3.1-2.8.2.1">
-                <p id="section-3.1-2.8.2.1.1">a shared secret<a href="#section-3.1-2.8.2.1.1" class="pilcrow">¶</a></p>
-</li>
-              <li id="section-3.1-2.8.2.2">
-                <p id="section-3.1-2.8.2.2.1">a kemct capsule<a href="#section-3.1-2.8.2.2.1" class="pilcrow">¶</a></p>
-</li>
-            </ol>
-</li>
-          <li id="section-3.1-2.9">
-            <p id="section-3.1-2.9.1">turns the shared secret into a Key Encryption Key (KEK)<a href="#section-3.1-2.9.1" class="pilcrow">¶</a></p>
-</li>
-          <li id="section-3.1-2.10">
-            <p id="section-3.1-2.10.1">encrypts the CEK using the KEK<a href="#section-3.1-2.10.1" class="pilcrow">¶</a></p>
-</li>
-          <li id="section-3.1-2.11">
-            <p id="section-3.1-2.11.1">constructs the envelope using the encrypted CEK, the encrypted CSR and the kemct, adds all required labels, including the kemResponse attribute<a href="#section-3.1-2.11.1" class="pilcrow">¶</a></p>
-</li>
-          <li id="section-3.1-2.12">
-            <p id="section-3.1-2.12.1">derives the response key from the CEK with HMAC-based Key Derivation Function (HKDF) and the transaction ID and caches it for later<a href="#section-3.1-2.12.1" class="pilcrow">¶</a></p>
-</li>
-          <li id="section-3.1-2.13">
-            <p id="section-3.1-2.13.1">signs the envelope using the public key which is to be signed<a href="#section-3.1-2.13.1" class="pilcrow">¶</a></p>
-</li>
-          <li id="section-3.1-2.14">
-            <p id="section-3.1-2.14.1">sends the request to the CA<a href="#section-3.1-2.14.1" class="pilcrow">¶</a></p>
-</li>
-        </ol>
-</section>
-</div>
-<div id="ca-issuance-and-response">
-<section id="section-3.2">
-        <h3 id="name-ca-issuance-and-response">
-<a href="#section-3.2" class="section-number selfRef">3.2. </a><a href="#name-ca-issuance-and-response" class="section-name selfRef">CA Issuance and Response</a>
-        </h3>
-<p id="section-3.2-1">In order to verify and decrypt the request:<a href="#section-3.2-1" class="pilcrow">¶</a></p>
-<ol start="1" type="1" class="normal type-1" id="section-3.2-2">
-<li id="section-3.2-2.1">
-            <p id="section-3.2-2.1.1">receives the SCEP Request, notes the transaction ID, nonce, message type and the kemResponse attribute<a href="#section-3.2-2.1.1" class="pilcrow">¶</a></p>
-</li>
-          <li id="section-3.2-2.2">
-            <p id="section-3.2-2.2.1">verifies the signature on the request<a href="#section-3.2-2.2.1" class="pilcrow">¶</a></p>
-</li>
-          <li id="section-3.2-2.3">
-            <p id="section-3.2-2.3.1">identifies the correct decapsulation key based on the Recipient Info and opens the kemct capsule<a href="#section-3.2-2.3.1" class="pilcrow">¶</a></p>
-</li>
-          <li id="section-3.2-2.4">
-            <p id="section-3.2-2.4.1">derives the wrapping key by performing HKDF on the shared secret, and then uses the wrapping key to decrypt the CEK<a href="#section-3.2-2.4.1" class="pilcrow">¶</a></p>
-</li>
-          <li id="section-3.2-2.5">
-            <p id="section-3.2-2.5.1">decrypts the CSR using the CEK<a href="#section-3.2-2.5.1" class="pilcrow">¶</a></p>
-</li>
-        </ol>
-<p id="section-3.2-3">The CA then issues the certificate, and prepares the response by:<a href="#section-3.2-3" class="pilcrow">¶</a></p>
-<ol start="1" type="1" class="normal type-1" id="section-3.2-4">
-<li id="section-3.2-4.1">
-            <p id="section-3.2-4.1.1">deriving the response key the same way as the client does above<a href="#section-3.2-4.1.1" class="pilcrow">¶</a></p>
-</li>
-          <li id="section-3.2-4.2">
-            <p id="section-3.2-4.2.1">generating a new AES key to act as a CEK for the response<a href="#section-3.2-4.2.1" class="pilcrow">¶</a></p>
-</li>
-          <li id="section-3.2-4.3">
-            <p id="section-3.2-4.3.1">preparing the envelope as per RFC 8894 and encrypts it with the new CEK<a href="#section-3.2-4.3.1" class="pilcrow">¶</a></p>
-</li>
-          <li id="section-3.2-4.4">
-            <p id="section-3.2-4.4.1">encrypting the CEK using the response key and label it with the transaction ID<a href="#section-3.2-4.4.1" class="pilcrow">¶</a></p>
-</li>
-          <li id="section-3.2-4.5">
-            <p id="section-3.2-4.5.1">putting the the encrypted response and the encrypted CEK into the response envelope and signs it using the RA signing key<a href="#section-3.2-4.5.1" class="pilcrow">¶</a></p>
-</li>
-          <li id="section-3.2-4.6">
-            <p id="section-3.2-4.6.1">transmitting the response back to the client<a href="#section-3.2-4.6.1" class="pilcrow">¶</a></p>
-</li>
-        </ol>
-</section>
-</div>
-<div id="scep-client-receipt">
-<section id="section-3.3">
-        <h3 id="name-scep-client-receipt">
-<a href="#section-3.3" class="section-number selfRef">3.3. </a><a href="#name-scep-client-receipt" class="section-name selfRef">SCEP Client Receipt</a>
-        </h3>
-<p id="section-3.3-1">Upon receiving the response, the client:<a href="#section-3.3-1" class="pilcrow">¶</a></p>
-<ol start="1" type="1" class="normal type-1" id="section-3.3-2">
-<li id="section-3.3-2.1">
-            <p id="section-3.3-2.1.1">verifies the signature on the response<a href="#section-3.3-2.1.1" class="pilcrow">¶</a></p>
-</li>
-          <li id="section-3.3-2.2">
-            <p id="section-3.3-2.2.1">verifies that the label on the encrypted CEK matches that of the transaction ID and then uses the response key derived in step 13 of the initial request to decrypt it<a href="#section-3.3-2.2.1" class="pilcrow">¶</a></p>
-</li>
-          <li id="section-3.3-2.3">
-            <p id="section-3.3-2.3.1">decrypts the payload with the CEK<a href="#section-3.3-2.3.1" class="pilcrow">¶</a></p>
-</li>
-        </ol>
-</section>
-</div>
-</section>
-</div>
-<div id="differences-to-rfc-8894">
-<section id="section-4">
-      <h2 id="name-differences-to-rfc-8894">
-<a href="#section-4" class="section-number selfRef">4. </a><a href="#name-differences-to-rfc-8894" class="section-name selfRef">Differences to RFC 8894</a>
-      </h2>
-<p id="section-4-1">This section documents changes to RFC 8894 that are not explicitly mentioned above.<a href="#section-4-1" class="pilcrow">¶</a></p>
-<div id="use-of-ra-certificates">
-<section id="section-4.1">
-        <h3 id="name-use-of-ra-certificates">
-<a href="#section-4.1" class="section-number selfRef">4.1. </a><a href="#name-use-of-ra-certificates" class="section-name selfRef">Use of RA Certificates</a>
-        </h3>
-<p id="section-4.1-1">While RFC 8894 is ambiguous about whether a CA must provide an encryption and signing certificate on the chain returned by getCaCerts or can use the key in its own certificate for both signing and encryption, this RFC mandates the use of a specific signing and encryption certificate, containing only the key usages Digital Signature and Key Encryption respectively.<a href="#section-4.1-1" class="pilcrow">¶</a></p>
-</section>
-</div>
+      </ul>
+<p id="section-1-5">These changes are optional updates to the SCEP protocol and are kept to a minimum. They introduce no new message types. Existing messages change only in which certificates the CA returns in the certificate bag, and which CMS RecipientInfo types are used. CAs and clients that do not implement this document continue to interoperate as described in <span>[<a href="#RFC8894" class="cite xref">RFC8894</a>]</span>. Open design questions requiring WG attention are collected in <a href="#appdx-open-questions" class="auto internal xref">Appendix B</a>.<a href="#section-1-5" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="conventions-and-definitions">
-<section id="section-5">
+<section id="section-2">
       <h2 id="name-conventions-and-definitions">
-<a href="#section-5" class="section-number selfRef">5. </a><a href="#name-conventions-and-definitions" class="section-name selfRef">Conventions and Definitions</a>
+<a href="#section-2" class="section-number selfRef">2. </a><a href="#name-conventions-and-definitions" class="section-name selfRef">Conventions and Definitions</a>
       </h2>
-<p id="section-5-1">The key words "<span class="bcp14">MUST</span>", "<span class="bcp14">MUST NOT</span>", "<span class="bcp14">REQUIRED</span>", "<span class="bcp14">SHALL</span>", "<span class="bcp14">SHALL NOT</span>", "<span class="bcp14">SHOULD</span>", "<span class="bcp14">SHOULD NOT</span>", "<span class="bcp14">RECOMMENDED</span>", "<span class="bcp14">NOT RECOMMENDED</span>",
+<p id="section-2-1">The key words "<span class="bcp14">MUST</span>", "<span class="bcp14">MUST NOT</span>", "<span class="bcp14">REQUIRED</span>", "<span class="bcp14">SHALL</span>", "<span class="bcp14">SHALL NOT</span>", "<span class="bcp14">SHOULD</span>", "<span class="bcp14">SHOULD NOT</span>", "<span class="bcp14">RECOMMENDED</span>", "<span class="bcp14">NOT RECOMMENDED</span>",
 "<span class="bcp14">MAY</span>", and "<span class="bcp14">OPTIONAL</span>" in this document are to be interpreted as
 described in BCP 14 <span>[<a href="#RFC2119" class="cite xref">RFC2119</a>]</span> <span>[<a href="#RFC8174" class="cite xref">RFC8174</a>]</span> when, and only when, they
-appear in all capitals, as shown here.<a href="#section-5-1" class="pilcrow">¶</a></p>
+appear in all capitals, as shown here.<a href="#section-2-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="ca-signing-and-encryption-certificates">
+<section id="section-3">
+      <h2 id="name-ca-signing-and-encryption-c">
+<a href="#section-3" class="section-number selfRef">3. </a><a href="#name-ca-signing-and-encryption-c" class="section-name selfRef">CA Signing and Encryption Certificates</a>
+      </h2>
+<p id="section-3-1"><span>[<a href="#RFC8894" class="cite xref">RFC8894</a>]</span> assumes that the CA uses a single key pair to decrypt SCEP requests, sign SCEP responses, and sign certificates,. <span><a href="https://rfc-editor.org/rfc/rfc8894#section-2.1.2" class="relref">Section 2.1.2</a> of [<a href="#RFC8894" class="cite xref">RFC8894</a>]</span> requires the CA certificate to assert both the digitalSignature and keyEncipherment key usages. GetCACert (<span><a href="https://rfc-editor.org/rfc/rfc8894#section-4.2" class="relref">Section 4.2</a> of [<a href="#RFC8894" class="cite xref">RFC8894</a>]</span>) returns either that one certificate or together with a bag of intermediate CA certificates.<a href="#section-3-1" class="pilcrow">¶</a></p>
+<p id="section-3-2">This document modifies <span>[<a href="#RFC8894" class="cite xref">RFC8894</a>]</span> in the following ways.<a href="#section-3-2" class="pilcrow">¶</a></p>
+<p id="section-3-3">The CA certificate <span class="bcp14">MAY</span> omit the keyEncipherment key usage, as required by a signing-only algorithm. When it does, unless the CA relies on the PasswordRecipientInfo mechanism as described in <span><a href="https://rfc-editor.org/rfc/rfc8894#section-3.1" class="relref">Section 3.1</a> of [<a href="#RFC8894" class="cite xref">RFC8894</a>]</span>, the CA <span class="bcp14">MUST</span> possess a SCEP protocol encryption certificate, which <span class="bcp14">MUST</span> carry the keyEncipherment key usage and basicConstraints.cA = false, and <span class="bcp14">SHOULD</span> be issued by the CA's signing certificate. When the CA possesses a pair of signing and encryption certificates in this way, the client encrypts SCEP requests to the CA's encryption certificate and verifies SCEP responses using the CA's signing certificate.<a href="#section-3-3" class="pilcrow">¶</a></p>
+<p id="section-3-4">As with <span>[<a href="#RFC8894" class="cite xref">RFC8894</a>]</span>, the client obtains the CA's certificates via the GetCACert request (<span><a href="https://rfc-editor.org/rfc/rfc8894#section-4.2" class="relref">Section 4.2</a> of [<a href="#RFC8894" class="cite xref">RFC8894</a>]</span>). When the CA possesses both a signing and an encryption certificate, the response is formatted exactly as described in <span><a href="https://rfc-editor.org/rfc/rfc8894#section-4.2.1.2" class="relref">Section 4.2.1.2</a> of [<a href="#RFC8894" class="cite xref">RFC8894</a>]</span>, with the bag of certificates containing both the CA's signing and encryption certificates <span class="bcp14">MAY</span> contain additional intermediate certificates. As the response is an un-ordered certificate bag, no order is implied, and the SCEP client <span class="bcp14">MUST</span> be capable of distinguishing the CA's signing and encryption certificates by key usage, and of path building through the provided intermediates.<a href="#section-3-4" class="pilcrow">¶</a></p>
+<p id="section-3-5">When the CA possesses both a signing and an encryption certificate, the GetNextCACert response (<span><a href="https://rfc-editor.org/rfc/rfc8894#section-4.7" class="relref">Section 4.7</a> of [<a href="#RFC8894" class="cite xref">RFC8894</a>]</span>) behaves the same way and <span class="bcp14">MUST</span> contain both the CA's next signing certificate and its next encryption certificate, and the client distinguishes them in the same way as for GetCACert. As in <span>[<a href="#RFC8894" class="cite xref">RFC8894</a>]</span>, the GetNextCACert response is signed by the CA's current signing key, and the client <span class="bcp14">MUST</span> validate that signature before trusting either certificate.<a href="#section-3-5" class="pilcrow">¶</a></p>
+<div id="new-getcacaps-keywords">
+<section id="section-3.1">
+        <h3 id="name-new-getcacaps-keywords">
+<a href="#section-3.1" class="section-number selfRef">3.1. </a><a href="#name-new-getcacaps-keywords" class="section-name selfRef">New GetCACaps keywords</a>
+        </h3>
+<p id="section-3.1-1">TODO: To be done in a future version. Define GetCACaps keywords (<span><a href="https://rfc-editor.org/rfc/rfc8894#section-3.5.2" class="relref">Section 3.5.2</a> of [<a href="#RFC8894" class="cite xref">RFC8894</a>]</span>) that let a CA advertise support for the mechanisms in this document, such as KEM-based request encryption, KEK-based response encryption, and specific KEM and signature algorithms. Register them in the "SCEP CA Capabilities" registry, and note that GetCACaps responses are not authenticated (<span><a href="https://rfc-editor.org/rfc/rfc8894#section-7.5" class="relref">Section 7.5</a> of [<a href="#RFC8894" class="cite xref">RFC8894</a>]</span>). This will have new stuff for IANA Considerations.<a href="#section-3.1-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="encrypting-requests-with-a-kem-algorithm">
+<section id="section-4">
+      <h2 id="name-encrypting-requests-with-a-">
+<a href="#section-4" class="section-number selfRef">4. </a><a href="#name-encrypting-requests-with-a-" class="section-name selfRef">Encrypting requests with a KEM algorithm</a>
+      </h2>
+<p id="section-4-1">This document extends the CMS encryption envelope mechanisms KeyTransRecipientInfo and PasswordRecipientInfo supported in <span><a href="https://rfc-editor.org/rfc/rfc8894#section-3.1" class="relref">Section 3.1</a> of [<a href="#RFC8894" class="cite xref">RFC8894</a>]</span> to additionally support KEM algorithms via the the CMS KEMRecipientInfo mechanism <span>[<a href="#RFC9629" class="cite xref">RFC9629</a>]</span>. This applies to every pkiMessage that the client sends to the CA, that is, PKCSReq, RenewalReq, CertPoll, GetCert, and GetCRL. The pkcsPKIEnvelope is otherwise unchanged from <span><a href="https://rfc-editor.org/rfc/rfc8894#section-3.2.2" class="relref">Section 3.2.2</a> of [<a href="#RFC8894" class="cite xref">RFC8894</a>]</span>. When the recipient encryption key is a KEM key, the EnvelopedData <span class="bcp14">MUST</span> contain exactly one RecipientInfo, which is a KEMRecipientInfo whose rid identifies the CA's encryption certificate. The KDF and key-encryption algorithms to use are specified by an algorithm's CMS specification. For example, how to use ML-KEM within CMS is specified in <span>[<a href="#RFC9936" class="cite xref">RFC9936</a>]</span>.<a href="#section-4-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="encrypting-responses">
+<section id="section-5">
+      <h2 id="name-encrypting-responses">
+<a href="#section-5" class="section-number selfRef">5. </a><a href="#name-encrypting-responses" class="section-name selfRef">Encrypting responses</a>
+      </h2>
+<p id="section-5-1"><span><a href="https://rfc-editor.org/rfc/rfc8894#section-3.1" class="relref">Section 3.1</a> of [<a href="#RFC8894" class="cite xref">RFC8894</a>]</span> encrypts the CertRep to the public key of the certificate that signed the request if that key is encryption capable, and otherwise uses PasswordRecipientInfo keyed with the challengePassword.<a href="#section-5-1" class="pilcrow">¶</a></p>
+<p id="section-5-2">The introduction of KEMRecipientInfo allows for a more efficient response encryption mechanism that no longer depends on the type of the client's key. Responses to a request encrypted with KEMRecipientInfo <span class="bcp14">MUST</span> be encrypted with KEKRecipientInfo (<span><a href="https://rfc-editor.org/rfc/rfc5652#section-6.2.3" class="relref">Section 6.2.3</a> of [<a href="#RFC5652" class="cite xref">RFC5652</a>]</span>) where the key-encryption key (KEK) is derived from the content-encryption key (CEK) of the request. The KEK is the output of the KDF from the request's KEMRecipientInfo, with the request CEK as input keying material, and with info set to the ASCII string "SCEP-KEM-Response" followed by the transactionID. Its length is the key size of the key-encryption algorithm from the request's KEMRecipientInfo, which the CA also uses as the keyEncryptionAlgorithm. The kekid keyIdentifier <span class="bcp14">MUST</span> contain the transactionID. Because each CertPoll is a new request with a new CEK, the response to a CertPoll is encrypted under a key derived from that CertPoll's CEK.<a href="#section-5-2" class="pilcrow">¶</a></p>
+<p id="section-5-3">A worked example of this key derivation is given in <a href="#appdx-response-kek" class="auto internal xref">Appendix A</a>.<a href="#section-5-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="enrolment-of-kem-end-entity-certificates">
+<section id="section-6">
+      <h2 id="name-enrolment-of-kem-end-entity">
+<a href="#section-6" class="section-number selfRef">6. </a><a href="#name-enrolment-of-kem-end-entity" class="section-name selfRef">Enrolment of KEM End-Entity Certificates</a>
+      </h2>
+<p id="section-6-1">Note: This section describes an open problem rather than a proposed solution. This section to be entirely re-written after WG adoption. The authors invite feedback on which option, or combination of options, to adopt.<a href="#section-6-1" class="pilcrow">¶</a></p>
+<p id="section-6-2"><span>[<a href="#RFC8894" class="cite xref">RFC8894</a>]</span> is based on PKCS#10 Certificate Signing Requests (CSRs), which assumes that the client's key can sign, which does not hold when requesting certification of a KEM end entity key.<a href="#section-6-2" class="pilcrow">¶</a></p>
+<p id="section-6-3">The design goal is to allow a client to enrol a KEM public key while giving the CA assurance that the client possesses the corresponding private key, with as little new protocol machinery as possible. For comparison, CMP offers a direct and an indirect method of proof-of-possession for KEM keys (<span><a href="https://rfc-editor.org/rfc/rfc9810#section-4.3.4" class="relref">Section 4.3.4</a> of [<a href="#RFC9810" class="cite xref">RFC9810</a>]</span>), but both rely on messages that SCEP lacks: a challenge-response exchange, and a certificate confirmation (<span><a href="https://rfc-editor.org/rfc/rfc8894#section-7.4" class="relref">Section 7.4</a> of [<a href="#RFC8894" class="cite xref">RFC8894</a>]</span>). All of the options below also require a way to convey a KEM public key in a request that cannot be self-signed.<a href="#section-6-3" class="pilcrow">¶</a></p>
+<p id="section-6-4">The authors lean towards Option 3: Enrol a Signing Key First, but would like to present all options to the WG.<a href="#section-6-4" class="pilcrow">¶</a></p>
+<div id="option-1-direct-decryption-challenge">
+<section id="section-6.1">
+        <h3 id="name-option-1-direct-decryption-">
+<a href="#section-6.1" class="section-number selfRef">6.1. </a><a href="#name-option-1-direct-decryption-" class="section-name selfRef">Option 1: Direct Decryption Challenge</a>
+        </h3>
+<p id="section-6.1-1">The CA responds to the request with a random challenge encrypted to the client's KEM key. The client decrypts it and returns it to the CA, which then issues the certificate.<a href="#section-6.1-1" class="pilcrow">¶</a></p>
+<p id="section-6.1-2">Pros: The CA verifies possession before it issues the certificate. This mirrors the CMP direct method (<span><a href="https://rfc-editor.org/rfc/rfc9810#section-5.2.8.3.3" class="relref">Section 5.2.8.3.3</a> of [<a href="#RFC9810" class="cite xref">RFC9810</a>]</span>).<a href="#section-6.1-2" class="pilcrow">¶</a></p>
+<p id="section-6.1-3">Cons: It adds a round trip and requires new message types and a GetCACaps keyword, unless the existing PENDING and CertPoll messages can be reused. The client must not act as a general decryption oracle (<span><a href="https://rfc-editor.org/rfc/rfc9810#section-8.2" class="relref">Section 8.2</a> of [<a href="#RFC9810" class="cite xref">RFC9810</a>]</span>).<a href="#section-6.1-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="option-2-indirect-decryption-via-encrypted-certificate">
+<section id="section-6.2">
+        <h3 id="name-option-2-indirect-decryptio">
+<a href="#section-6.2" class="section-number selfRef">6.2. </a><a href="#name-option-2-indirect-decryptio" class="section-name selfRef">Option 2: Indirect Decryption via Encrypted Certificate</a>
+        </h3>
+<p id="section-6.2-1">The CA issues the certificate and returns it in a CertRep encrypted to the client's KEM key, using the mechanism in <a href="#encrypting-requests-with-a-kem-algorithm" class="auto internal xref">Section 4</a> with the client's KEM key as the recipient. Only the holder of the private key can recover the certificate.<a href="#section-6.2-1" class="pilcrow">¶</a></p>
+<p id="section-6.2-2">Pros: It needs no new messages, and it reuses the existing CertRep envelope. This mirrors the indirect method that CMP prefers (<span><a href="https://rfc-editor.org/rfc/rfc9810#section-5.2.8.3.2" class="relref">Section 5.2.8.3.2</a> of [<a href="#RFC9810" class="cite xref">RFC9810</a>]</span>).<a href="#section-6.2-2" class="pilcrow">¶</a></p>
+<p id="section-6.2-3">Cons: SCEP has no certificate confirmation, so the CA never learns whether the client could decrypt the certificate. The assurance is also lost once the certificate is published, for example in Certificate Transparency logs or via GetCert (<span><a href="https://rfc-editor.org/rfc/rfc9810#section-8.11" class="relref">Section 8.11</a> of [<a href="#RFC9810" class="cite xref">RFC9810</a>]</span>).<a href="#section-6.2-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="option-3-enrol-a-signing-key-first">
+<section id="section-6.3">
+        <h3 id="name-option-3-enrol-a-signing-ke">
+<a href="#section-6.3" class="section-number selfRef">6.3. </a><a href="#name-option-3-enrol-a-signing-ke" class="section-name selfRef">Option 3: Enrol a Signing Key First</a>
+        </h3>
+<p id="section-6.3-1">The client first enrols a signature key. It then requests the KEM certificate in a RenewalReq signed with the issued signing certificate. This could be coupled with privateKeyPossessionStatement from <span>[<a href="#RFC9883" class="cite xref">RFC9883</a>]</span>.<a href="#section-6.3-1" class="pilcrow">¶</a></p>
+<p id="section-6.3-2">Pros: It uses the existing RenewalReq flow without new message types. It suits deployments where KEM keys are always issued alongside signing keys.<a href="#section-6.3-2" class="pilcrow">¶</a></p>
+<p id="section-6.3-3">Cons: It authenticates the client but proves nothing about the KEM private key, which is the same gap as <span><a href="https://rfc-editor.org/rfc/rfc8894#section-7.6" class="relref">Section 7.6</a> of [<a href="#RFC8894" class="cite xref">RFC8894</a>]</span>. It also requires two coupled transactions and a prior signing certificate, which increases CA state and is laborious in cases where the client only needs an encryption certificate.<a href="#section-6.3-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="error-handling">
+<section id="section-7">
+      <h2 id="name-error-handling">
+<a href="#section-7" class="section-number selfRef">7. </a><a href="#name-error-handling" class="section-name selfRef">Error Handling</a>
+      </h2>
+<p id="section-7-1">If the rid in a request's KEMRecipientInfo does not identify a current CA encryption certificate, for example because the client is using an encryption certificate that has been rolled over, the CA <span class="bcp14">MUST</span> respond with failInfo set to badRequest, and the client <span class="bcp14">SHOULD</span> obtain the CA's certificates again using GetCACert. If KEM decapsulation, key unwrapping, or content decryption fails, the CA <span class="bcp14">MUST</span> respond with failInfo set to badMessageCheck, and <span class="bcp14">MUST NOT</span> indicate, in failInfo, failInfoText, or otherwise, which of these steps failed.<a href="#section-7-1" class="pilcrow">¶</a></p>
+<p id="section-7-2">The client <span class="bcp14">MUST</span> reject a response if the kekid keyIdentifier of its KEKRecipientInfo does not match the transactionID of the request, or if unwrapping the response CEK or decrypting the content fails.<a href="#section-7-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="operational-considerations">
+<section id="section-8">
+      <h2 id="name-operational-considerations">
+<a href="#section-8" class="section-number selfRef">8. </a><a href="#name-operational-considerations" class="section-name selfRef">Operational Considerations</a>
+      </h2>
+<div id="coexistence-with-legacy-scep-deployments">
+<section id="section-8.1">
+        <h3 id="name-coexistence-with-legacy-sce">
+<a href="#section-8.1" class="section-number selfRef">8.1. </a><a href="#name-coexistence-with-legacy-sce" class="section-name selfRef">Coexistence with Legacy SCEP Deployments</a>
+        </h3>
+<p id="section-8.1-1">The mechanisms defined in this document are intended to be as un-obtrusive as possible for existing implementations, and are intended to be delpoyed in conjunction with an upgrade to post-quantum cryptography. To facilitate this migration, it is <span class="bcp14">RECOMMENDED</span> that a PQC-capable SCEP CA be operated side by side with any legacy SCEP CA, for example at a distinct host or SCEPPATH (<span><a href="https://rfc-editor.org/rfc/rfc8894#section-4.1" class="relref">Section 4.1</a> of [<a href="#RFC8894" class="cite xref">RFC8894</a>]</span>), rather than replacing it. Legacy clients continue to use the legacy CA until they are upgraded or retired.<a href="#section-8.1-1" class="pilcrow">¶</a></p>
+</section>
+</div>
 </section>
 </div>
 <div id="security-considerations">
-<section id="section-6">
+<section id="section-9">
       <h2 id="name-security-considerations">
-<a href="#section-6" class="section-number selfRef">6. </a><a href="#name-security-considerations" class="section-name selfRef">Security Considerations</a>
+<a href="#section-9" class="section-number selfRef">9. </a><a href="#name-security-considerations" class="section-name selfRef">Security Considerations</a>
       </h2>
 <div id="key-material-handling">
-<section id="section-6.1">
+<section id="section-9.1">
         <h3 id="name-key-material-handling">
-<a href="#section-6.1" class="section-number selfRef">6.1. </a><a href="#name-key-material-handling" class="section-name selfRef">Key Material Handling</a>
+<a href="#section-9.1" class="section-number selfRef">9.1. </a><a href="#name-key-material-handling" class="section-name selfRef">Key Material Handling</a>
         </h3>
-<p id="section-6.1-1">The ephemeral symmetric keys generated for a SCEP transactions (the wrapping key, the response key and the two CEKs) should never be used more than once, stored or logged, and implementers should make effort to scrub them from memory as soon as they've been used.<a href="#section-6.1-1" class="pilcrow">¶</a></p>
+<p id="section-9.1-1">The ephemeral symmetric keys generated for a SCEP transactions (the wrapping key, the response key and the two CEKs) <span class="bcp14">MUST</span> never be used more than once, stored or logged, and implementers should make effort to scrub them from memory as soon as they've been used.<a href="#section-9.1-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="kem-algorithm-requirements">
+<section id="section-9.2">
+        <h3 id="name-kem-algorithm-requirements">
+<a href="#section-9.2" class="section-number selfRef">9.2. </a><a href="#name-kem-algorithm-requirements" class="section-name selfRef">KEM Algorithm Requirements</a>
+        </h3>
+<p id="section-9.2-1">The CA's encryption key is long-lived and is used to decapsulate many requests, including requests constructed by attackers. A KEM used with this document <span class="bcp14">MUST</span> therefore be secure against adaptive chosen-ciphertext attacks (IND-CCA2). ML-KEM meets this requirement. Each request uses a fresh KEM encapsulation, as required by <span>[<a href="#RFC9629" class="cite xref">RFC9629</a>]</span>.<a href="#section-9.2-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="response-key-derivation">
+<section id="section-9.3">
+        <h3 id="name-response-key-derivation">
+<a href="#section-9.3" class="section-number selfRef">9.3. </a><a href="#name-response-key-derivation" class="section-name selfRef">Response Key Derivation</a>
+        </h3>
+<p id="section-9.3-1">The response key-encryption key is derived from the request CEK, so it is no stronger than that CEK. A client <span class="bcp14">SHOULD</span> use a content-encryption algorithm for the request whose key is at least as long as the key of the key-encryption algorithm in its KEMRecipientInfo, for example AES-256-CBC when using AES-256 key wrap. The request CEK is used both to encrypt the request content and as input keying material to the KDF. The KDF and its info string, which contains a fixed label and the transactionID, separate the derived key from the CEK and from keys derived in other transactions.<a href="#section-9.3-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="binding-of-the-response-to-the-request">
+<section id="section-9.4">
+        <h3 id="name-binding-of-the-response-to-">
+<a href="#section-9.4" class="section-number selfRef">9.4. </a><a href="#name-binding-of-the-response-to-" class="section-name selfRef">Binding of the Response to the Request</a>
+        </h3>
+<p id="section-9.4-1">In <span>[<a href="#RFC8894" class="cite xref">RFC8894</a>]</span>, the response is encrypted to the key in the certificate that signed the request, so only the holder of that key can read the response. <span><a href="https://rfc-editor.org/rfc/rfc8894#section-7.9" class="relref">Section 7.9</a> of [<a href="#RFC8894" class="cite xref">RFC8894</a>]</span> relies on this property when it argues that the use of SHA-1 is safe. Under this document, the response can be read by whoever constructed the request and therefore knows its CEK, which includes an attacker who forges a request. The issued certificate is not secret, so this does not affect confidentiality. However, the authorisation of a request rests entirely on the request's own authentication (the challengePassword or the signature on a RenewalReq), and the argument in <span><a href="https://rfc-editor.org/rfc/rfc8894#section-7.9" class="relref">Section 7.9</a> of [<a href="#RFC8894" class="cite xref">RFC8894</a>]</span> does not apply. Clients and CAs implementing this document <span class="bcp14">MUST NOT</span> use SHA-1 to sign or verify SCEP messages.<a href="#section-9.4-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="post-quantum-security">
+<section id="section-9.5">
+        <h3 id="name-post-quantum-security">
+<a href="#section-9.5" class="section-number selfRef">9.5. </a><a href="#name-post-quantum-security" class="section-name selfRef">Post-Quantum Security</a>
+        </h3>
+<p id="section-9.5-1">An attacker who records SCEP traffic now could decrypt it later with a cryptographically relevant quantum computer, exposing the challengePassword and the request contents. Deployments requiring post-quantum confidentiality <span class="bcp14">SHOULD</span> encrypt requests using KEMRecipientInfo with a post-quantum KEM, and <span class="bcp14">SHOULD NOT</span> use KeyTransRecipientInfo with RSA. Where such deployments instead rely on PasswordRecipientInfo, the challengePassword <span class="bcp14">SHOULD</span> have at least 128 bits of entropy, since the protection is then only as strong as the challengePassword (<span><a href="https://rfc-editor.org/rfc/rfc8894#section-7.3" class="relref">Section 7.3</a> of [<a href="#RFC8894" class="cite xref">RFC8894</a>]</span>). Classical signatures are at risk only from an attacker who has a quantum computer at the time of the exchange. Deployments requiring post-quantum authentication <span class="bcp14">SHOULD</span> use post-quantum signature algorithms for both the CA's signing certificate and the client's signing key.<a href="#section-9.5-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="decryption-oracles">
+<section id="section-9.6">
+        <h3 id="name-decryption-oracles">
+<a href="#section-9.6" class="section-number selfRef">9.6. </a><a href="#name-decryption-oracles" class="section-name selfRef">Decryption Oracles</a>
+        </h3>
+<p id="section-9.6-1">The CA decapsulates and decrypts content chosen by unauthenticated clients. It <span class="bcp14">MUST NOT</span> reveal which decryption step failed (see <a href="#error-handling" class="auto internal xref">Section 7</a>), so that it cannot be used as a decryption oracle. A client <span class="bcp14">MUST NOT</span> return decrypted content to the CA or to any other party, except as specified for proof-of-possession in <a href="#enrolment-of-kem-end-entity-certificates" class="auto internal xref">Section 6</a>.<a href="#section-9.6-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
 </div>
 <div id="iana-considerations">
-<section id="section-7">
+<section id="section-10">
       <h2 id="name-iana-considerations">
-<a href="#section-7" class="section-number selfRef">7. </a><a href="#name-iana-considerations" class="section-name selfRef">IANA Considerations</a>
+<a href="#section-10" class="section-number selfRef">10. </a><a href="#name-iana-considerations" class="section-name selfRef">IANA Considerations</a>
       </h2>
-<p id="section-7-1">This document has no IANA actions.<a href="#section-7-1" class="pilcrow">¶</a></p>
+<p id="section-10-1">This document has no IANA actions.<a href="#section-10-1" class="pilcrow">¶</a></p>
 </section>
 </div>
-<div id="references">
-<section id="section-8">
+<div id="sec-combined-references">
+<section id="section-11">
       <h2 id="name-references">
-<a href="#section-8" class="section-number selfRef">8. </a><a href="#name-references" class="section-name selfRef">References</a>
+<a href="#section-11" class="section-number selfRef">11. </a><a href="#name-references" class="section-name selfRef">References</a>
       </h2>
-<div id="normative-references">
-<section id="section-8.1">
-        <h3 id="name-normative-references">
-<a href="#section-8.1" class="section-number selfRef">8.1. </a><a href="#name-normative-references" class="section-name selfRef">Normative References</a>
-        </h3>
-<p id="section-8.1-1">RFC 8894 Simple Certificate Enrolment Protocol https://www.rfc-editor.org/rfc/rfc8894.html#
-RFC 9936 Use of ML-KEM in the Cryptographic Message Syntax (CMS) https://datatracker.ietf.org/doc/rfc9936/<a href="#section-8.1-1" class="pilcrow">¶</a></p>
-</section>
-</div>
-</section>
-</div>
 <div id="sec-normative-references">
-<section id="section-9">
-      <h2 id="name-normative-references-2">
-<a href="#section-9" class="section-number selfRef">9. </a><a href="#name-normative-references-2" class="section-name selfRef">Normative References</a>
-      </h2>
+<section id="section-11.1">
+        <h3 id="name-normative-references">
+<a href="#section-11.1" class="section-number selfRef">11.1. </a><a href="#name-normative-references" class="section-name selfRef">Normative References</a>
+        </h3>
 <dl class="references">
 <dt id="RFC2119">[RFC2119]</dt>
-      <dd>
+        <dd>
 <span class="refAuthor">Bradner, S.</span>, <span class="refTitle">"Key words for use in RFCs to Indicate Requirement Levels"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 2119</span>, <span class="seriesInfo">DOI 10.17487/RFC2119</span>, <time datetime="1997-03" class="refDate">March 1997</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc2119">https://www.rfc-editor.org/rfc/rfc2119</a>&gt;</span>. </dd>
 <dd class="break"></dd>
+<dt id="RFC5652">[RFC5652]</dt>
+        <dd>
+<span class="refAuthor">Housley, R.</span>, <span class="refTitle">"Cryptographic Message Syntax (CMS)"</span>, <span class="seriesInfo">STD 70</span>, <span class="seriesInfo">RFC 5652</span>, <span class="seriesInfo">DOI 10.17487/RFC5652</span>, <time datetime="2009-09" class="refDate">September 2009</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc5652">https://www.rfc-editor.org/rfc/rfc5652</a>&gt;</span>. </dd>
+<dd class="break"></dd>
 <dt id="RFC8174">[RFC8174]</dt>
-    <dd>
+        <dd>
 <span class="refAuthor">Leiba, B.</span>, <span class="refTitle">"Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 8174</span>, <span class="seriesInfo">DOI 10.17487/RFC8174</span>, <time datetime="2017-05" class="refDate">May 2017</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc8174">https://www.rfc-editor.org/rfc/rfc8174</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC8894">[RFC8894]</dt>
+        <dd>
+<span class="refAuthor">Gutmann, P.</span>, <span class="refTitle">"Simple Certificate Enrolment Protocol"</span>, <span class="seriesInfo">RFC 8894</span>, <span class="seriesInfo">DOI 10.17487/RFC8894</span>, <time datetime="2020-09" class="refDate">September 2020</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc8894">https://www.rfc-editor.org/rfc/rfc8894</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC9629">[RFC9629]</dt>
+      <dd>
+<span class="refAuthor">Housley, R.</span>, <span class="refAuthor">Gray, J.</span>, and <span class="refAuthor">T. Okubo</span>, <span class="refTitle">"Using Key Encapsulation Mechanism (KEM) Algorithms in the Cryptographic Message Syntax (CMS)"</span>, <span class="seriesInfo">RFC 9629</span>, <span class="seriesInfo">DOI 10.17487/RFC9629</span>, <time datetime="2024-08" class="refDate">August 2024</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc9629">https://www.rfc-editor.org/rfc/rfc9629</a>&gt;</span>. </dd>
 <dd class="break"></dd>
 </dl>
 </section>
 </div>
-<div id="acknowledgments">
+<div id="sec-informative-references">
+<section id="section-11.2">
+        <h3 id="name-informative-references">
+<a href="#section-11.2" class="section-number selfRef">11.2. </a><a href="#name-informative-references" class="section-name selfRef">Informative References</a>
+        </h3>
+<dl class="references">
+<dt id="RFC9810">[RFC9810]</dt>
+        <dd>
+<span class="refAuthor">Brockhaus, H.</span>, <span class="refAuthor">von Oheimb, D.</span>, <span class="refAuthor">Ounsworth, M.</span>, and <span class="refAuthor">J. Gray</span>, <span class="refTitle">"Internet X.509 Public Key Infrastructure -- Certificate Management Protocol (CMP)"</span>, <span class="seriesInfo">RFC 9810</span>, <span class="seriesInfo">DOI 10.17487/RFC9810</span>, <time datetime="2025-07" class="refDate">July 2025</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc9810">https://www.rfc-editor.org/rfc/rfc9810</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC9881">[RFC9881]</dt>
+        <dd>
+<span class="refAuthor">Massimo, J.</span>, <span class="refAuthor">Kampanakis, P.</span>, <span class="refAuthor">Turner, S.</span>, and <span class="refAuthor">B. E. Westerbaan</span>, <span class="refTitle">"Internet X.509 Public Key Infrastructure -- Algorithm Identifiers for the Module-Lattice-Based Digital Signature Algorithm (ML-DSA)"</span>, <span class="seriesInfo">RFC 9881</span>, <span class="seriesInfo">DOI 10.17487/RFC9881</span>, <time datetime="2025-10" class="refDate">October 2025</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc9881">https://www.rfc-editor.org/rfc/rfc9881</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC9883">[RFC9883]</dt>
+        <dd>
+<span class="refAuthor">Housley, R.</span>, <span class="refTitle">"An Attribute for Statement of Possession of a Private Key"</span>, <span class="seriesInfo">RFC 9883</span>, <span class="seriesInfo">DOI 10.17487/RFC9883</span>, <time datetime="2025-10" class="refDate">October 2025</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc9883">https://www.rfc-editor.org/rfc/rfc9883</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC9909">[RFC9909]</dt>
+        <dd>
+<span class="refAuthor">Bashiri, K.</span>, <span class="refAuthor">Fluhrer, S.</span>, <span class="refAuthor">Gazdag, S.</span>, <span class="refAuthor">Van Geest, D.</span>, and <span class="refAuthor">S. Kousidis</span>, <span class="refTitle">"Internet X.509 Public Key Infrastructure -- Algorithm Identifiers for the Stateless Hash-Based Digital Signature Algorithm (SLH-DSA)"</span>, <span class="seriesInfo">RFC 9909</span>, <span class="seriesInfo">DOI 10.17487/RFC9909</span>, <time datetime="2025-12" class="refDate">December 2025</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc9909">https://www.rfc-editor.org/rfc/rfc9909</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC9935">[RFC9935]</dt>
+        <dd>
+<span class="refAuthor">Turner, S.</span>, <span class="refAuthor">Kampanakis, P.</span>, <span class="refAuthor">Massimo, J.</span>, and <span class="refAuthor">B. E. Westerbaan</span>, <span class="refTitle">"Internet X.509 Public Key Infrastructure - Algorithm Identifiers for the Module-Lattice-Based Key-Encapsulation Mechanism (ML-KEM)"</span>, <span class="seriesInfo">RFC 9935</span>, <span class="seriesInfo">DOI 10.17487/RFC9935</span>, <time datetime="2026-03" class="refDate">March 2026</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc9935">https://www.rfc-editor.org/rfc/rfc9935</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC9936">[RFC9936]</dt>
+      <dd>
+<span class="refAuthor">Prat, J.</span>, <span class="refAuthor">Ounsworth, M.</span>, and <span class="refAuthor">D. Van Geest</span>, <span class="refTitle">"Use of ML-KEM in the Cryptographic Message Syntax (CMS)"</span>, <span class="seriesInfo">RFC 9936</span>, <span class="seriesInfo">DOI 10.17487/RFC9936</span>, <time datetime="2026-03" class="refDate">March 2026</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc9936">https://www.rfc-editor.org/rfc/rfc9936</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+</dl>
+</section>
+</div>
+</section>
+</div>
+<div id="appdx-response-kek">
 <section id="appendix-A">
+      <h2 id="name-worked-example-response-key">
+<a href="#appendix-A" class="section-number selfRef">Appendix A. </a><a href="#name-worked-example-response-key" class="section-name selfRef">Worked Example: Response Key Derivation</a>
+      </h2>
+<p id="appendix-A-1">This appendix shows a worked example of the derivation of the response key-encryption key described in <a href="#encrypting-responses" class="auto internal xref">Section 5</a>, and the resulting KEKRecipientInfo. The request is assumed to have used ML-KEM-768, for which <span>[<a href="#RFC9936" class="cite xref">RFC9936</a>]</span> specifies HKDF-SHA256 as the KDF and AES-256 key wrap as the key-encryption algorithm. Both the request and the response use AES-256-CBC for content encryption. All values are hexadecimal unless otherwise noted.<a href="#appendix-A-1" class="pilcrow">¶</a></p>
+<div class="alignLeft art-text artwork" id="appendix-A-2">
+<pre>
+Example of deriving the response KEK and wrapping the response CEK.
+
+# Inputs:
+
+transactionID: 2F3C5D7E9A1B4C6D8E0F1A2B3C4D5E6F
+
+KDF (from request KEMRecipientInfo): id-alg-hkdf-with-sha256
+
+wrap (from request KEMRecipientInfo): id-aes256-wrap
+
+Request CEK:
+467eb4af44735cdb3121bd89e589dec369f1663f95c4edfae548b85ba8ef5561
+
+Response CEK:
+e525c8bfc2d7e54893d1fba2611507de49dfbecc06360a5304fb6001c9d08d75
+
+# Key derivation:
+# info = "SCEP-KEM-Response" || transactionID
+# KEK = HKDF-SHA256(IKM = Request CEK, salt = &lt;absent&gt;,
+#                  info = info, L = 32)
+
+info: 534345502d4b454d2d526573706f6e7365324633433544374539413142344
+3364438453046314132423343344435453646
+
+KEK:
+abf488f31e6606215fb41e2b5ddb2160f99b4fdf9134e7de136706d083a4c46d
+
+# Outputs:
+# encryptedKey = AES-256-KeyWrap(KEK, Response CEK)
+
+encryptedKey: 823563a9a3d5f7e9edf9caf9d5d090205bce75c90452d1bfe8fb3
+b3b7d9100af88e37ff31b6cf6d9
+
+# RecipientInfo (kekri), DER:
+
+kekri: a25e02010430220420324633433544374539413142344336443845304631
+4132423343344435453646300b060960864801650304012d0428823563a9a3d5f7e
+9edf9caf9d5d090205bce75c90452d1bfe8fb3b3b7d9100af88e37ff31b6cf6d9
+</pre><a href="#appendix-A-2" class="pilcrow">¶</a>
+</div>
+</section>
+</div>
+<div id="appdx-open-questions">
+<section id="appendix-B">
+      <h2 id="name-open-design-questions">
+<a href="#appendix-B" class="section-number selfRef">Appendix B. </a><a href="#name-open-design-questions" class="section-name selfRef">Open Design Questions</a>
+      </h2>
+<p id="appendix-B-1">This appendix lists design questions on which the authors seek working group input.<a href="#appendix-B-1" class="pilcrow">¶</a></p>
+<div id="downgrade-protection">
+<section id="appendix-B.1">
+        <h3 id="name-downgrade-protection">
+<a href="#appendix-B.1" class="section-number selfRef">B.1. </a><a href="#name-downgrade-protection" class="section-name selfRef">Downgrade Protection</a>
+        </h3>
+<p id="appendix-B.1-1">GetCACaps responses are not authenticated (<span><a href="https://rfc-editor.org/rfc/rfc8894#section-7.5" class="relref">Section 7.5</a> of [<a href="#RFC8894" class="cite xref">RFC8894</a>]</span>), and an active attacker could also remove the CA's encryption certificate from a GetCACert response. Either change could push a client back to a classical mechanism such as RSA key transport. However, harvest-now-decrypt-later attacks are passive, and an attacker who can interfere with the exchange in real time gains little from such a downgrade. Explicit downgrade protection, for example requiring a client configured for PQC to refuse classical mechanisms, may therefore not be required. Should this document require it?<a href="#appendix-B.1-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="algorithm-profile-and-mandatory-to-implement-algorithms">
+<section id="appendix-B.2">
+        <h3 id="name-algorithm-profile-and-manda">
+<a href="#appendix-B.2" class="section-number selfRef">B.2. </a><a href="#name-algorithm-profile-and-manda" class="section-name selfRef">Algorithm Profile and Mandatory-to-Implement Algorithms</a>
+        </h3>
+<p id="appendix-B.2-1"><span>[<a href="#RFC8894" class="cite xref">RFC8894</a>]</span> makes AES128-CBC and SHA-256 mandatory to implement (<span><a href="https://rfc-editor.org/rfc/rfc8894#section-2.9" class="relref">Section 2.9</a> of [<a href="#RFC8894" class="cite xref">RFC8894</a>]</span>). This document currently names no PQC algorithms, and instead relies on each algorithm's CMS specification, such as <span>[<a href="#RFC9936" class="cite xref">RFC9936</a>]</span> for ML-KEM. Is it required to define an algorithm profile, for example mandatory-to-implement KEM and signature algorithms, AES-256 content encryption, or authenticated encryption using AuthEnvelopedData? Or is the document more future-proof without one?<a href="#appendix-B.2-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="message-size-and-http-transport">
+<section id="appendix-B.3">
+        <h3 id="name-message-size-and-http-trans">
+<a href="#appendix-B.3" class="section-number selfRef">B.3. </a><a href="#name-message-size-and-http-trans" class="section-name selfRef">Message Size and HTTP Transport</a>
+        </h3>
+<p id="appendix-B.3-1">PQC public keys, signatures, and KEM ciphertexts are considerably larger than their classical counterparts. As a result, SCEP messages sent via HTTP GET with base64-encoded data in the URI (<span><a href="https://rfc-editor.org/rfc/rfc8894#section-4.1" class="relref">Section 4.1</a> of [<a href="#RFC8894" class="cite xref">RFC8894</a>]</span>) are more likely to exceed URI length limits. Should this document require HTTP POST, as indicated by the "POSTPKIOperation" capability, for any message that uses the mechanisms in this document?<a href="#appendix-B.3-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="acknowledgments">
+<section id="appendix-C">
       <h2 id="name-acknowledgments">
 <a href="#name-acknowledgments" class="section-name selfRef">Acknowledgments</a>
       </h2>
-<p id="appendix-A-1">TODO acknowledge.<a href="#appendix-A-1" class="pilcrow">¶</a></p>
+<p id="appendix-C-1">TODO acknowledge.<a href="#appendix-C-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="authors-addresses">
-<section id="appendix-B">
+<section id="appendix-D">
       <h2 id="name-authors-addresses">
 <a href="#name-authors-addresses" class="section-name selfRef">Authors' Addresses</a>
       </h2>
-<address class="vcard">
-        <div dir="auto" class="left"><span class="fn nameRole">Mike Ounsworth</span></div>
-</address>
 <address class="vcard">
         <div dir="auto" class="left"><span class="fn nameRole">Mike Agrenius Kushner</span></div>
 <div dir="auto" class="left"><span class="org">Keyfactor</span></div>
 <div class="email">
 <span>Email:</span>
 <a href="mailto:mike.kushner@keyfactor.com" class="email">mike.kushner@keyfactor.com</a>
+</div>
+</address>
+<address class="vcard">
+        <div dir="auto" class="left"><span class="fn nameRole">Mike Ounsworth</span></div>
+<div dir="auto" class="left"><span class="org">Cryptic Forest Software</span></div>
+<div dir="auto" class="left">
+<span class="locality">Sioux Lookout, Ontario</span>  </div>
+<div dir="auto" class="left"><span class="country-name">Canada</span></div>
+<div class="email">
+<span>Email:</span>
+<a href="mailto:mike@ounsworth.ca" class="email">mike@ounsworth.ca</a>
+</div>
+</address>
+<address class="vcard">
+        <div dir="auto" class="left"><span class="fn nameRole">Alex Harrison</span></div>
+<div dir="auto" class="left"><span class="org">Cisco Systems</span></div>
+<div class="email">
+<span>Email:</span>
+<a href="mailto:aleharri@cisco.com" class="email">aleharri@cisco.com</a>
 </div>
 </address>
 </section>
