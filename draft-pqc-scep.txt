@@ -4,9 +4,9 @@
 
 Network Working Group                                         M. Kushner
 Internet-Draft                                                 Keyfactor
-Intended status: Informational                              M. Ounsworth
-Expires: 14 May 2027                                      Cryptic Forest
-                                                             A. Harrison
+Updates: 8894 (if approved)                                 M. Ounsworth
+Intended status: Informational                            Cryptic Forest
+Expires: 14 May 2027                                         A. Harrison
                                                            Cisco Systems
                                                         10 November 2026
 
@@ -79,9 +79,9 @@ Table of Contents
    1.  Introduction
    2.  Conventions and Definitions
    3.  CA Signing and Encryption Certificates
-     3.1.  New GetCACaps keywords
-   4.  Encrypting requests with a KEM algorithm
-   5.  Encrypting responses
+     3.1.  New GetCACaps Keywords
+   4.  Encrypting Requests with a KEM Algorithm
+   5.  Encrypting Responses
    6.  Enrolment of KEM End-Entity Certificates
      6.1.  Option 1: Direct Decryption Challenge
      6.2.  Option 2: Indirect Decryption via Encrypted Certificate
@@ -95,7 +95,8 @@ Table of Contents
      9.3.  Response Key Derivation
      9.4.  Binding of the Response to the Request
      9.5.  Post-Quantum Security
-     9.6.  Decryption Oracles
+     9.6.  Response Recipient Authentication
+     9.7.  Decryption Oracles
    10. IANA Considerations
    11. References
      11.1.  Normative References
@@ -203,7 +204,7 @@ Table of Contents
    response is signed by the CA's current signing key, and the client
    MUST validate that signature before trusting either certificate.
 
-3.1.  New GetCACaps keywords
+3.1.  New GetCACaps Keywords
 
    TODO: To be done in a future version.  Define GetCACaps keywords
    (Section 3.5.2 of [RFC8894]) that let a CA advertise support for the
@@ -213,7 +214,7 @@ Table of Contents
    and note that GetCACaps responses are not authenticated (Section 7.5
    of [RFC8894]).  This will have new stuff for IANA Considerations.
 
-4.  Encrypting requests with a KEM algorithm
+4.  Encrypting Requests with a KEM Algorithm
 
    This document extends the CMS encryption envelope mechanisms
    KeyTransRecipientInfo and PasswordRecipientInfo supported in
@@ -229,7 +230,7 @@ Table of Contents
    specification.  For example, how to use ML-KEM within CMS is
    specified in [RFC9936].
 
-5.  Encrypting responses
+5.  Encrypting Responses
 
    Section 3.1 of [RFC8894] encrypts the CertRep to the public key of
    the certificate that signed the request if that key is encryption
@@ -253,6 +254,9 @@ Table of Contents
    that CertPoll's CEK.
 
    A worked example of this key derivation is given in Appendix A.
+
+   See Section 9.6 for discussion of how this modifies the response
+   authentication model relative to [RFC8894].
 
 6.  Enrolment of KEM End-Entity Certificates
 
@@ -415,7 +419,21 @@ Table of Contents
    quantum authentication SHOULD use post-quantum signature algorithms
    for both the CA's signing certificate and the client's signing key.
 
-9.6.  Decryption Oracles
+9.6.  Response Recipient Authentication
+
+   In [RFC8894], a response encrypted under KeyTransRecipientInfo is
+   implicitly authenticated to the key requesting enrolment since the
+   private key is required to read the response.
+
+   The KEKRecipientInfo response encryption mechanism defined in this
+   document implicitly authenticates the response recipient to be the
+   same client that sent the request, but does not require the subject's
+   private key for decryption.  Even in the case where the subject key
+   being enrolled is a KEM key, such a mechanism is still not provided.
+   This is considered to be a sufficiently similar protocol
+   authentication model as to be acceptable.
+
+9.7.  Decryption Oracles
 
    The CA decapsulates and decrypts content chosen by unauthenticated
    clients.  It MUST NOT reveal which decryption step failed (see
