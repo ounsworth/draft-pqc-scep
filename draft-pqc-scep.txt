@@ -6,9 +6,9 @@ Network Working Group                                         M. Kushner
 Internet-Draft                                                 Keyfactor
 Updates: 8894 (if approved)                                 M. Ounsworth
 Intended status: Informational                            Cryptic Forest
-Expires: 14 May 2027                                         A. Harrison
+Expires: 15 May 2027                                         A. Harrison
                                                            Cisco Systems
-                                                        10 November 2026
+                                                        11 November 2026
 
 
    Post-Quantum updates for the Simple Certificate Enrolment Protocol
@@ -28,8 +28,9 @@ Abstract
    2. support for KEM-based SCEP protocol encryption, and 3. supporting
    enrolment of KEM end entity certificates.
 
-   The changes are kept minimal so that they can be easily implemented
-   with minimal impact on existing SCEP tooling.
+   These changes are optional extensions to the SCEP protocol and are
+   kept to a minimum so that they can be easily implemented with minimal
+   impact on existing SCEP tooling.
 
 About This Document
 
@@ -58,7 +59,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 14 May 2027.
+   This Internet-Draft will expire on 15 May 2027.
 
 Copyright Notice
 
@@ -147,8 +148,8 @@ Table of Contents
    *  Options for enrolling KEM end-entity keys are described as an open
       problem (Section 6).
 
-   These changes are optional updates to the SCEP protocol and are kept
-   to a minimum.  They introduce no new message types.  Existing
+   These changes are optional extensions to the SCEP protocol and are
+   kept to a minimum.  They introduce no new message types.  Existing
    messages change only in which certificates the CA returns in the
    certificate bag, and which CMS RecipientInfo types are used.  CAs and
    clients that do not implement this document continue to interoperate
