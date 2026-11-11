@@ -67,7 +67,7 @@ This document specifies several mechanisms to modernize SCEP for use with post-q
 The main focus areas are: 1. allowing the CA to have separate signing and encryption certificates,
 2. support for KEM-based SCEP protocol encryption, and 3. supporting enrolment of KEM end entity certificates.
 
-The changes are kept minimal so that they can be easily implemented with minimal impact on existing
+These changes are optional extensions to the SCEP protocol and are kept to a minimum so that they can be easily implemented with minimal impact on existing
 SCEP tooling.
 
 
@@ -86,7 +86,7 @@ This document updates {{RFC8894}} as follows:
 * The CA encrypts responses to such requests under a key derived from the request, so a client whose key can only sign can still receive an encrypted response protected by a KEM-based key exchange ({{encrypting-responses}}).
 * Options for enrolling KEM end-entity keys are described as an open problem ({{enrolment-of-kem-end-entity-certificates}}).
 
-These changes are optional updates to the SCEP protocol and are kept to a minimum. They introduce no new message types. Existing messages change only in which certificates the CA returns in the certificate bag, and which CMS RecipientInfo types are used. CAs and clients that do not implement this document continue to interoperate as described in {{RFC8894}}. Open design questions requiring WG attention are collected in {{appdx-open-questions}}.
+These changes are optional extensions to the SCEP protocol and are kept to a minimum. They introduce no new message types. Existing messages change only in which certificates the CA returns in the certificate bag, and which CMS RecipientInfo types are used. CAs and clients that do not implement this document continue to interoperate as described in {{RFC8894}}. Open design questions requiring WG attention are collected in {{appdx-open-questions}}.
 
 # Conventions and Definitions
 
